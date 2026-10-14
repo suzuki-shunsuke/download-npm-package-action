@@ -1,0 +1,65 @@
+---
+name: Download npm packages and upload them as artifacts
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        description: The directory where package.json and package-lock.json exist
+        required: false
+        type: string
+        default: "."
+      node-version-file:
+        required: false
+        type: string
+        default: .node-version
+      artifact_name:
+        description: |
+          GitHub artifact name.
+          Artifact names must be unique in a workflow run.
+        required: false
+        type: string
+        default: node_modules
+      ref:
+        description: |
+          The git ref to checkout. If empty, the default ref of actions/checkout is used.
+          Set this when the job restoring node_modules checks out a different ref (e.g. github.event.pull_request.head.sha).
+          The job restoring node_modules can check out the same commit with the output `sha`.
+        required: false
+        type: string
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: false
+    outputs:
+      sha:
+        description: The commit SHA checked out to install npm packages
+        value: ${{jobs.download.outputs.sha}}
+
+permissions: {}
+
+jobs:
+  download:
+    timeout-minutes: 20
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      sha: ${{steps.sha.outputs.value}}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{inputs.ref}}
+          persist-credentials: false
+
+      - name: Get the commit SHA
+        id: sha
+        run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Download npm packages and upload them as artifacts
+        uses: $/.
+        with:
+          working_directory: ${{inputs.working_directory}}
+          node-version-file: ${{inputs.node-version-file}}
+          artifact_name: ${{inputs.artifact_name}}
+          takumi_guard_bot_id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
