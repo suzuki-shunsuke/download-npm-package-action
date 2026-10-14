@@ -1,0 +1,64 @@
+---
+permissions: {}
+on:
+  workflow_call:
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: false
+jobs:
+  test:
+    uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@51ece8dcaabff59820bfb2053c56e3cb281cf7b2 # v0.0.1
+    with:
+      aqua_version: v2.64.0
+    permissions:
+      pull-requests: read
+      contents: read
+
+  npm:
+    uses: $/.github/workflows/download.yaml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      working_directory: testdata
+      ref: ${{github.event.pull_request.head.sha}}
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
+  restore:
+    timeout-minutes: 15
+    runs-on: ubuntu-26.04
+    needs: npm
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the commit where npm packages were installed
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{needs.npm.outputs.sha}}
+          persist-credentials: false
+
+      - name: Check the output sha
+        env:
+          SHA: ${{needs.npm.outputs.sha}}
+          HEAD_SHA: ${{github.event.pull_request.head.sha}}
+        run: test "$SHA" = "$HEAD_SHA"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - name: Restore node_modules
+        uses: $/restore
+        with:
+          working_directory: testdata
+
+      - name: Use the restored package
+        working-directory: testdata
+        run: node -e 'console.log(require("semver").valid("1.2.3"))'
+
+      # Symlinks in node_modules/.bin are kept
+      - name: Run the command of the restored package
+        working-directory: testdata
+        run: npx --no-install semver 1.2.3

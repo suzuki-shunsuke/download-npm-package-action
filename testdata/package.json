@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "dependencies": {
+    "semver": "7.7.2"
+  }
+}
