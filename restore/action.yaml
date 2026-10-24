@@ -9,6 +9,12 @@ inputs:
     description: GitHub artifact name
     required: false
     default: node_modules
+  rebuild:
+    description: |
+      If this is true, npm rebuild is run to run install scripts of npm packages,
+      which are skipped when npm packages are installed.
+    required: false
+    default: "true"
 runs:
   using: composite
   steps:
@@ -24,3 +30,9 @@ runs:
       env:
         ARTIFACT_NAME: ${{inputs.artifact_name}}
       run: tar -xf "$RUNNER_TEMP/download-npm-package-action-restore/$ARTIFACT_NAME/node_modules.tar"
+
+    - name: Run install scripts of npm packages
+      if: inputs.rebuild == 'true'
+      shell: bash
+      working-directory: ${{inputs.working_directory}}
+      run: npm rebuild

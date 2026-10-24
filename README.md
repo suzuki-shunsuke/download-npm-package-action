@@ -13,6 +13,9 @@ To avoid this, this action installs npm packages in a separate job and uploads `
 
 `node_modules` is archived with tar to keep file permissions and symbolic links such as `node_modules/.bin`.
 
+Install scripts of npm packages (e.g. `postinstall`) aren't run in the job with `id-token: write`, because `npm ci` is run with `--ignore-scripts`.
+Instead, the restore action runs them by `npm rebuild` in the job restoring `node_modules`.
+
 This is the npm version of [download-go-module-action](https://github.com/suzuki-shunsuke/download-go-module-action).
 
 ## Usage
@@ -85,11 +88,12 @@ jobs:
 
 ### Restore action
 
-The restore action doesn't set up Node.js. Set it up yourself if needed.
+The restore action doesn't set up Node.js. Set it up yourself before running the restore action, because it runs `npm rebuild` by default.
 
 ```yaml
 - uses: suzuki-shunsuke/download-npm-package-action/restore@main
   with:
     # working_directory: . # Optional. The directory where node_modules is extracted
     # artifact_name: node_modules # Optional
+    # rebuild: "true" # Optional. If this is false, npm rebuild isn't run, so install scripts of npm packages aren't run
 ```

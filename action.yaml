@@ -32,10 +32,12 @@ runs:
       with:
         bot-id: ${{inputs.takumi_guard_bot_id}}
 
+    # Don't run install scripts of npm packages in this job because it has id-token: write.
+    # The restore action runs them by npm rebuild in the job restoring node_modules.
     - name: Install npm packages
       shell: bash
       working-directory: ${{inputs.working_directory}}
-      run: npm ci
+      run: npm ci --ignore-scripts
 
     # Archive node_modules with tar to keep file permissions and symlinks (e.g. node_modules/.bin)
     - name: Archive node_modules
