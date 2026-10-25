@@ -62,3 +62,13 @@ jobs:
       - name: Run the command of the restored package
         working-directory: testdata
         run: npx --no-install semver 1.2.3
+
+      # The restore action sets NPM_CONFIG_OFFLINE=true, so packages that aren't restored can't be downloaded
+      - name: Check npm can't download packages from the registry
+        working-directory: testdata
+        run: |
+          test "$NPM_CONFIG_OFFLINE" = true
+          if npx --yes cowsay@1.6.0 hi; then
+            echo "::error::npx should fail because NPM_CONFIG_OFFLINE=true"
+            exit 1
+          fi

@@ -15,6 +15,12 @@ inputs:
       which are skipped when npm packages are installed.
     required: false
     default: "true"
+  offline:
+    description: |
+      If this is true, NPM_CONFIG_OFFLINE=true is set for subsequent steps,
+      so npm commands such as npx don't download packages from the registry without Takumi Guard.
+    required: false
+    default: "true"
 runs:
   using: composite
   steps:
@@ -30,6 +36,13 @@ runs:
       env:
         ARTIFACT_NAME: ${{inputs.artifact_name}}
       run: tar -xf "$RUNNER_TEMP/download-npm-package-action-restore/$ARTIFACT_NAME/node_modules.tar"
+
+    # Use only packages restored from the artifact in subsequent steps.
+    # Install scripts that download files by themselves aren't affected.
+    - name: Disable access to the npm registry
+      if: inputs.offline == 'true'
+      shell: bash
+      run: echo "NPM_CONFIG_OFFLINE=true" >> "$GITHUB_ENV"
 
     - name: Run install scripts of npm packages
       if: inputs.rebuild == 'true'
