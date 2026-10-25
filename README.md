@@ -16,6 +16,10 @@ To avoid this, this action installs npm packages in a separate job and uploads `
 Install scripts of npm packages (e.g. `postinstall`) aren't run in the job with `id-token: write`, because `npm ci` is run with `--ignore-scripts`.
 Instead, the restore action runs them by `npm rebuild` in the job restoring `node_modules`.
 
+The restore action also sets `NPM_CONFIG_OFFLINE=true` for subsequent steps, so npm commands such as `npx` can't download packages from the registry without Takumi Guard.
+Install scripts that download files by themselves aren't affected.
+If a job really needs to access the registry, override it by `echo NPM_CONFIG_OFFLINE=false >> "$GITHUB_ENV"`.
+
 This is the npm version of [download-go-module-action](https://github.com/suzuki-shunsuke/download-go-module-action).
 
 ## Usage

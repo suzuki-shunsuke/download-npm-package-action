@@ -31,6 +31,14 @@ runs:
         ARTIFACT_NAME: ${{inputs.artifact_name}}
       run: tar -xf "$RUNNER_TEMP/download-npm-package-action-restore/$ARTIFACT_NAME/node_modules.tar"
 
+    # Use only packages restored from the artifact in subsequent steps,
+    # so npm commands such as npx don't download packages from the registry without Takumi Guard.
+    # Install scripts that download files by themselves aren't affected.
+    # If a job really needs to access the registry, override it by `echo NPM_CONFIG_OFFLINE=false >> "$GITHUB_ENV"`.
+    - name: Disable access to the npm registry
+      shell: bash
+      run: echo "NPM_CONFIG_OFFLINE=true" >> "$GITHUB_ENV"
+
     - name: Run install scripts of npm packages
       if: inputs.rebuild == 'true'
       shell: bash
