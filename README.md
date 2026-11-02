@@ -68,6 +68,7 @@ Check out the same commit in the job restoring `node_modules`, so both jobs use 
 - `working_directory`: The directory where package.json and package-lock.json exist. The default is `.`
 - `node-version-file`: The default is `.node-version`
 - `artifact_name`: The default is `node_modules`. Artifact names must be unique in a workflow run, so set this if this workflow is called multiple times in a workflow run
+- `repository`: The repository (owner/repo) to checkout. By default, the repository where the workflow runs is used. Set this to install npm packages of another repository. Check out the same repository in the job restoring `node_modules`
 - `ref`: The git ref to checkout. By default, the default ref of actions/checkout is used, which is the merge commit on `pull_request` events
 
 ### GitHub Action
