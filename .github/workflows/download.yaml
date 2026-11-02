@@ -19,6 +19,13 @@ on:
         required: false
         type: string
         default: node_modules
+      repository:
+        description: |
+          The repository (owner/repo) to checkout. If empty, the repository where the workflow runs is used.
+          Set this to install npm packages of another repository, e.g. when documents are built in another repository.
+          The job restoring node_modules must check out the same repository.
+        required: false
+        type: string
       ref:
         description: |
           The git ref to checkout. If empty, the default ref of actions/checkout is used.
@@ -49,6 +56,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          repository: ${{inputs.repository}}
           ref: ${{inputs.ref}}
           persist-credentials: false
 

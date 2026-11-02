@@ -72,3 +72,52 @@ jobs:
             echo "::error::npx should fail because NPM_CONFIG_OFFLINE=true"
             exit 1
           fi
+
+  # Install npm packages of another repository with the input repository
+  npm-external:
+    uses: $/.github/workflows/download.yaml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      repository: suzuki-shunsuke/tfcmt
+      ref: 671a0a34185aac930fa29bbda285b24e6d2610f9
+      working_directory: website
+      node-version-file: website/.node-version
+      artifact_name: node_modules-external
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+
+  restore-external:
+    timeout-minutes: 15
+    runs-on: ubuntu-26.04
+    needs: npm-external
+    permissions:
+      contents: read
+    steps:
+      - name: Check the output sha
+        env:
+          SHA: ${{needs.npm-external.outputs.sha}}
+        run: test "$SHA" = 671a0a34185aac930fa29bbda285b24e6d2610f9
+
+      - name: Checkout the commit where npm packages were installed
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: suzuki-shunsuke/tfcmt
+          ref: ${{needs.npm-external.outputs.sha}}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: website/.node-version
+
+      - name: Restore node_modules
+        uses: $/restore
+        with:
+          working_directory: website
+          artifact_name: node_modules-external
+
+      - name: Run the command of the restored package
+        working-directory: website
+        run: npx --no-install docusaurus --version
