@@ -54,7 +54,7 @@ jobs:
       sha: ${{steps.sha.outputs.value}}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{inputs.repository}}
           ref: ${{inputs.ref}}
